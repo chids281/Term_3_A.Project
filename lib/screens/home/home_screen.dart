@@ -246,6 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isDesktop = screenWidth >= 1050;
+    final isMobile = !isDesktop;
 
     return Scaffold(
       drawer: isDesktop
@@ -304,20 +305,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.fromLTRB(
-                        isDesktop ? 18 : 16,
-                        18,
-                        isDesktop ? 30 : 16,
-                        35,
+                        isDesktop ? 18 : (isMobile ? 14 : 20),
+                        isMobile ? 12 : 18,
+                        isDesktop ? 30 : (isMobile ? 14 : 20),
+                        isMobile ? 24 : 35,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           PremiumHeader(isDesktop: isDesktop),
-                          const SizedBox(height: 24),
+                          SizedBox(height: isMobile ? 16 : 24),
                           const HeroSection(),
-                          const SizedBox(height: 22),
+                          SizedBox(height: isMobile ? 16 : 22),
                           const MarketCards(),
-                          const SizedBox(height: 22),
+                          SizedBox(height: isMobile ? 16 : 22),
                           LayoutBuilder(
                             builder: (context, constraints) {
                               final converter = PremiumConverter(
@@ -372,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               return Column(
                                 children: [
                                   converter,
-                                  const SizedBox(height: 22),
+                                  SizedBox(height: isMobile ? 16 : 22),
                                   TrendCard(
                                     fromCurrency: _fromCurrency,
                                     toCurrency: _toCurrency,
@@ -381,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                             },
                           ),
-                          const SizedBox(height: 22),
+                          SizedBox(height: isMobile ? 16 : 22),
                           RecentConversions(
                             databaseServices: _databaseServices,
                           ),
@@ -814,6 +815,7 @@ class PremiumHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final isMobile = MediaQuery.sizeOf(context).width < 1050;
 
     return Row(
       children: [
@@ -831,11 +833,11 @@ class PremiumHeader extends StatelessWidget {
               );
             },
           ),
-        const Text(
+        Text(
           'Overview',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 27,
+            fontSize: isMobile ? 22 : 27,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -862,7 +864,7 @@ class PremiumHeader extends StatelessWidget {
                       _showNotifications(context);
                     },
                     child: Container(
-                      padding: const EdgeInsets.all(13),
+                      padding: EdgeInsets.all(isMobile ? 10 : 13),
                       decoration: BoxDecoration(
                         color:
                             Colors.white.withValues(alpha: 0.10),
@@ -917,7 +919,7 @@ class PremiumHeader extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: isMobile ? 8 : 12),
 
         // Clickable profile
         Material(
@@ -928,11 +930,11 @@ class PremiumHeader extends StatelessWidget {
               _openProfile(context);
             },
             child: Container(
-              padding: const EdgeInsets.fromLTRB(
-                7,
-                6,
-                15,
-                6,
+              padding: EdgeInsets.fromLTRB(
+                isMobile ? 4 : 7,
+                isMobile ? 4 : 6,
+                isMobile ? 4 : 15,
+                isMobile ? 4 : 6,
               ),
               decoration: BoxDecoration(
                 color:
@@ -1141,6 +1143,7 @@ class HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final isMobile = MediaQuery.sizeOf(context).width < 1050;
     final fullName = user?.displayName?.trim();
 
     final firstName = fullName != null && fullName.isNotEmpty
@@ -1149,7 +1152,7 @@ class HeroSection extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(30),
+      padding: EdgeInsets.all(isMobile ? 20 : 30),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -1160,7 +1163,7 @@ class HeroSection extends StatelessWidget {
             Color(0xFF4F6DF5),
           ],
         ),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(isMobile ? 22 : 26),
         boxShadow: const [
           BoxShadow(
             color: Color(0x44315CE2),
@@ -1179,26 +1182,27 @@ class HeroSection extends StatelessWidget {
             children: [
               Text(
                 'Welcome back, $firstName',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 29,
+                  fontSize: isMobile ? 24 : 29,
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 9),
-              const Text(
+              Text(
                 'The global market is moving. Stay ahead of every rate.',
                 style: TextStyle(
                   color: Color(0xFFD7E4FF),
-                  fontSize: 15,
+                  fontSize: isMobile ? 14 : 15,
+                  height: 1.45,
                 ),
               ),
             ],
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: 16,
-              vertical: 11,
+              vertical: isMobile ? 9 : 11,
             ),
             decoration: BoxDecoration(
               color: const Color(0x33071A40),
@@ -1311,19 +1315,27 @@ class _MarketCardsState extends State<MarketCards> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<DashboardMarketRate>>(
-      future: _ratesFuture,
-      builder: (context, snapshot) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 1050;
+        final useSingleColumn = constraints.maxWidth < 350;
+        final mobileCardWidth = useSingleColumn
+            ? constraints.maxWidth
+            : (constraints.maxWidth - 12) / 2;
+
+        return FutureBuilder<List<DashboardMarketRate>>(
+          future: _ratesFuture,
+          builder: (context, snapshot) {
         if (snapshot.connectionState ==
             ConnectionState.waiting) {
-          return const Wrap(
-            spacing: 15,
-            runSpacing: 15,
+          return Wrap(
+            spacing: isMobile ? 12 : 15,
+            runSpacing: isMobile ? 12 : 15,
             children: [
-              DashboardRateLoadingCard(),
-              DashboardRateLoadingCard(),
-              DashboardRateLoadingCard(),
-              DashboardRateLoadingCard(),
+              DashboardRateLoadingCard(width: isMobile ? mobileCardWidth : 220),
+              DashboardRateLoadingCard(width: isMobile ? mobileCardWidth : 220),
+              DashboardRateLoadingCard(width: isMobile ? mobileCardWidth : 220),
+              DashboardRateLoadingCard(width: isMobile ? mobileCardWidth : 220),
             ],
           );
         }
@@ -1368,10 +1380,11 @@ class _MarketCardsState extends State<MarketCards> {
         final rates = snapshot.data!;
 
         return Wrap(
-          spacing: 15,
-          runSpacing: 15,
+          spacing: isMobile ? 12 : 15,
+          runSpacing: isMobile ? 12 : 15,
           children: rates.map((rate) {
             return CurrencyMarketCard(
+              width: isMobile ? mobileCardWidth : 220,
               symbol: rate.symbol,
               pair: rate.pair,
               value: _formatRate(rate.value),
@@ -1379,6 +1392,8 @@ class _MarketCardsState extends State<MarketCards> {
               color: rate.color,
             );
           }).toList(),
+        );
+          },
         );
       },
     );
@@ -1412,35 +1427,43 @@ class DashboardMarketRate {
 }
 
 class DashboardRateLoadingCard extends StatelessWidget {
-  const DashboardRateLoadingCard({super.key});
+  final double width;
+
+  const DashboardRateLoadingCard({
+    super.key,
+    this.width = 220,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220,
+      width: width,
       height: 84,
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(width < 200 ? 12 : 18),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white12),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          SizedBox(
-            width: 27,
-            height: 27,
+          const SizedBox(
+            width: 24,
+            height: 24,
             child: CircularProgressIndicator(
               color: Color(0xFF8BE9FF),
               strokeWidth: 2.5,
             ),
           ),
-          SizedBox(width: 13),
-          Text(
-            'Loading rate...',
-            style: TextStyle(
-              color: Colors.white70,
-              fontWeight: FontWeight.w600,
+          SizedBox(width: width < 200 ? 8 : 13),
+          Expanded(
+            child: Text(
+              width < 200 ? 'Loading...' : 'Loading rate...',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
             ),
           ),
         ],
@@ -1450,6 +1473,7 @@ class DashboardRateLoadingCard extends StatelessWidget {
 }
 
 class CurrencyMarketCard extends StatelessWidget {
+  final double width;
   final String symbol;
   final String pair;
   final String value;
@@ -1458,6 +1482,7 @@ class CurrencyMarketCard extends StatelessWidget {
 
   const CurrencyMarketCard({
     super.key,
+    this.width = 220,
     required this.symbol,
     required this.pair,
     required this.value,
@@ -1468,8 +1493,8 @@ class CurrencyMarketCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220,
-      padding: const EdgeInsets.all(18),
+      width: width,
+      padding: EdgeInsets.all(width < 200 ? 13 : 18),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.11),
         borderRadius: BorderRadius.circular(20),
@@ -1485,8 +1510,8 @@ class CurrencyMarketCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 47,
-            height: 47,
+            width: width < 200 ? 40 : 47,
+            height: width < 200 ? 40 : 47,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: color,
@@ -1494,14 +1519,14 @@ class CurrencyMarketCard extends StatelessWidget {
             ),
             child: Text(
               symbol,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+              fontSize: width < 200 ? 20 : 24,
                 fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          const SizedBox(width: 13),
+          SizedBox(width: width < 200 ? 9 : 13),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1568,6 +1593,8 @@ class PremiumConverter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 1050;
+
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1589,7 +1616,7 @@ class PremiumConverter extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: isMobile ? 17 : 22),
           TextField(
             controller: amountController,
             enabled: !isConverting,
@@ -1608,7 +1635,7 @@ class PremiumConverter extends StatelessWidget {
               fillColor: Colors.white.withValues(alpha: 0.08),
             ),
           ),
-          const SizedBox(height: 17),
+          SizedBox(height: isMobile ? 13 : 17),
           Row(
             children: [
               Expanded(
@@ -1621,7 +1648,7 @@ class PremiumConverter extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: EdgeInsets.symmetric(horizontal: isMobile ? 6 : 10),
                 child: IconButton.filled(
                   onPressed: isConverting ? null : onSwap,
                   style: IconButton.styleFrom(
@@ -1645,10 +1672,10 @@ class PremiumConverter extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: isMobile ? 15 : 20),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
@@ -1680,7 +1707,7 @@ class PremiumConverter extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 17),
+          SizedBox(height: isMobile ? 14 : 17),
           ElevatedButton.icon(
             onPressed: isConverting ? null : onConvert,
             icon: isConverting
@@ -1805,6 +1832,8 @@ class _TrendCardState extends State<TrendCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 1050;
+
     return GlassCard(
       child: FutureBuilder<List<HistoricalRatePoint>>(
         future: _trendFuture,
@@ -1992,7 +2021,7 @@ class _TrendCardState extends State<TrendCard> {
               ),
               const SizedBox(height: 18),
               SizedBox(
-                height: 210,
+                height: isMobile ? 165 : 210,
                 width: double.infinity,
                 child: CustomPaint(
                   painter: TrendPainter(
@@ -2443,6 +2472,77 @@ class ConversionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 1050;
+
+    if (isMobile) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const CircleAvatar(
+            radius: 19,
+            backgroundColor: Color(0x26315CE2),
+            child: Icon(
+              Icons.swap_horiz_rounded,
+              color: Color(0xFF8BE9FF),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  from,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white38,
+                      size: 17,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        to,
+                        style: const TextStyle(
+                          color: Color(0xFF8BE9FF),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  time,
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Delete conversion',
+            onPressed: onDelete,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: Color(0xFFFFA3A3),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Row(
       children: [
         const CircleAvatar(
@@ -2507,12 +2607,14 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 1050;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 17 : 24),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(isMobile ? 20 : 24),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.14),
         ),
@@ -2571,4 +2673,3 @@ class BackgroundGlow extends StatelessWidget {
     );
   }
 }
-
