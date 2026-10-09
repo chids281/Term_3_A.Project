@@ -1,8 +1,7 @@
-import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../utils/app_theme.dart';
-import '../auth/welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,8 +15,6 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-
-  Timer? _navigationTimer;
 
   @override
   void initState() {
@@ -38,37 +35,14 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.easeIn,
     );
 
+    // Start the splash screen animations.
     _animationController.forward();
 
-    _navigationTimer = Timer(const Duration(seconds: 3), () {
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) {
-            return const WelcomeScreen();
-          },
-          transitionsBuilder: (
-            context,
-            animation,
-            secondaryAnimation,
-            child,
-          ) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 700),
-        ),
-      );
-    });
+    // Navigation is now handled by AuthGate in main.dart.
   }
 
   @override
   void dispose() {
-    _navigationTimer?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -100,6 +74,7 @@ class _SplashScreenState extends State<SplashScreen>
                 color: Color(0x1A67E8F9),
               ),
             ),
+
             const Positioned(
               bottom: -160,
               left: -100,
@@ -108,6 +83,7 @@ class _SplashScreenState extends State<SplashScreen>
                 color: Color(0x1A22C55E),
               ),
             ),
+
             const Positioned(
               top: 100,
               left: 70,
@@ -116,6 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
                 angle: -0.20,
               ),
             ),
+
             const Positioned(
               top: 140,
               right: 100,
@@ -124,6 +101,7 @@ class _SplashScreenState extends State<SplashScreen>
                 angle: 0.15,
               ),
             ),
+
             const Positioned(
               bottom: 110,
               left: 110,
@@ -132,6 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
                 angle: 0.12,
               ),
             ),
+
             const Positioned(
               bottom: 100,
               right: 90,
@@ -140,6 +119,7 @@ class _SplashScreenState extends State<SplashScreen>
                 angle: -0.15,
               ),
             ),
+
             SafeArea(
               child: Center(
                 child: FadeTransition(
@@ -154,7 +134,8 @@ class _SplashScreenState extends State<SplashScreen>
                           height: 120,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(34),
+                            borderRadius:
+                                BorderRadius.circular(34),
                             boxShadow: const [
                               BoxShadow(
                                 color: Color(0x40000000),
@@ -169,7 +150,9 @@ class _SplashScreenState extends State<SplashScreen>
                             size: 68,
                           ),
                         ),
+
                         const SizedBox(height: 30),
+
                         const Text(
                           'CurrenSee',
                           style: TextStyle(
@@ -179,7 +162,9 @@ class _SplashScreenState extends State<SplashScreen>
                             letterSpacing: 1.5,
                           ),
                         ),
+
                         const SizedBox(height: 12),
+
                         const Text(
                           'See the value. Convert with confidence.',
                           textAlign: TextAlign.center,
@@ -190,7 +175,9 @@ class _SplashScreenState extends State<SplashScreen>
                             letterSpacing: 0.3,
                           ),
                         ),
+
                         const SizedBox(height: 45),
+
                         const SizedBox(
                           width: 32,
                           height: 32,
@@ -199,7 +186,9 @@ class _SplashScreenState extends State<SplashScreen>
                             strokeWidth: 3,
                           ),
                         ),
+
                         const SizedBox(height: 15),
+
                         const Text(
                           'Loading live exchange rates...',
                           style: TextStyle(
@@ -213,6 +202,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
+
             const Positioned(
               left: 0,
               right: 0,
@@ -276,10 +266,14 @@ class SmallCurrencySymbol extends StatelessWidget {
         height: 58,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: Colors.white.withValues(
+            alpha: 0.08,
+          ),
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: Colors.white.withValues(
+              alpha: 0.12,
+            ),
           ),
         ),
         child: Text(

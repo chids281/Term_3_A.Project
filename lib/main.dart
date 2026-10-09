@@ -1,3 +1,4 @@
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/splash/splash_screen.dart';
+import 'screens/auth/welcome_screen.dart';
 import 'utils/app_theme.dart';
 
 Future<void> main() async {
@@ -31,11 +33,43 @@ class CurrenSeeApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _showSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    // Display the splash screen for 3 seconds.
+    await Future.delayed(
+      const Duration(seconds: 3),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _showSplash = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Always show the splash screen first.
+    if (_showSplash) {
+      return const SplashScreen();
+    }
+
+    // Check the user's Firebase authentication status.
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
@@ -44,11 +78,18 @@ class AuthGate extends StatelessWidget {
           return const AuthLoadingScreen();
         }
 
+        // Handle authentication errors safely.
+        if (snapshot.hasError) {
+          return const AuthLoadingScreen();
+        }
+
+        // User is already logged in.
         if (snapshot.hasData) {
           return const HomeScreen();
         }
 
-        return const SplashScreen();
+        // User is not logged in.
+        return const WelcomeScreen();
       },
     );
   }
